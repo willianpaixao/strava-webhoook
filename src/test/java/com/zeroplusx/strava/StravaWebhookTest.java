@@ -40,6 +40,14 @@ public class StravaWebhookTest {
   }
 
   @Test
+  public void StravaWebhookEmptyTest() throws Exception {
+    new StravaWebhook().service(httpRequest, httpResponse);
+
+    writerOut.flush();
+    verify(httpResponse, times(1)).setStatusCode(HttpURLConnection.HTTP_BAD_METHOD);
+  }
+
+  @Test
   public void StravaWebhookPostTest() throws Exception {
     String requestJson = gson.toJson(Map.of("object_type", "activity"));
     BufferedReader bodyReader = new BufferedReader(new StringReader(requestJson));

@@ -1,5 +1,11 @@
 image: maven:3.6.3-openjdk-11
 
+include:
+  - template: Code-Quality.gitlab-ci.yml
+  - template: Dependency-Scanning.gitlab-ci.yml
+  - template: License-Management.gitlab-ci.yml
+  - template: SAST.gitlab-ci.yml
+
 variables:
   MAVEN_CLI_OPTS: "--errors --fail-at-end"
 
@@ -21,3 +27,7 @@ package:
   stage: build
   script:
     - 'mvn $MAVEN_CLI_OPTS package'
+
+code_quality:
+  artifacts:
+    paths: [gl-code-quality-report.json]
