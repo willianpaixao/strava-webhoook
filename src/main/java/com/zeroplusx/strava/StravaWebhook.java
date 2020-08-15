@@ -13,37 +13,46 @@ import java.util.logging.Logger;
 public class StravaWebhook implements HttpFunction {
   private static final Logger logger = Logger.getLogger(StravaWebhook.class.getName());
   private static final String token = System.getProperty("VERIFY_TOKEN");
-  private static final Gson gson = new Gson();
 
   @Override
   public void service(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
     BufferedWriter writer = httpResponse.getWriter();
 
-    if (httpRequest.getMethod() == null) {
-      logger.info("Invalid request: null method");
-      httpResponse.setStatusCode(HttpURLConnection.HTTP_BAD_METHOD);
-    } else {
-      switch (httpRequest.getMethod()) {
-        case "GET":
-          if (httpRequest.getQueryParameters().get("hub.mode").get(0).equals("subscribe") &&
-            httpRequest.getQueryParameters().get("hub.verify_token").get(0).equals(token)) {
-            String json = String.format("{\"hub.challenge\": %s}", httpRequest.getQueryParameters().get("hub.challenge").get(0));
-            writer.write(json);
-          }
+    if (httpRequest.getMethod() == "GET") {
+      if (httpRequest.getQueryParameters().containsKey("hub.verify_token") &&
+        httpRequest.getQueryParameters().get("hub.verify_token").get(0).equals(token)) {
+        if (httpRequest.getQueryParameters().get("hub.mode").get(0).equals("subscribe")) {
+          String json = String.format("{\"hub.challenge\": %s}", httpRequest.getQueryParameters().get("hub.challenge").get(0));
+          writer.write(json);
+          logger.info("Webhook subscription created");
           httpResponse.setStatusCode(HttpURLConnection.HTTP_OK);
-          break;
-        case "POST":
-          JsonObject body = gson.fromJson(httpRequest.getReader(), JsonObject.class);
-          if (body != null && body.has("object_type")) {
-            httpResponse.setStatusCode(HttpURLConnection.HTTP_OK);
-            writer.write("EVENT_RECEIVED");
-          }
-          break;
-        default:
-          logger.info("Invalid request: method not allowed");
-          httpResponse.setStatusCode(HttpURLConnection.HTTP_BAD_METHOD);
-          break;
+        }
+      } else {
+        logger.info("Invalid request: invalid verify_token");
+        httpResponse.setStatusCode(HttpURLConnection.HTTP_BAD_REQUEST);
       }
+    } else if (httpRequest.getMethod() == "POST") {
+      Gson gson = new Gson();
+      JsonObject body = gson.fromJson(httpRequest.getReader(), JsonObject.class);
+      if (body != null && body.has("object_type")) {
+        switch (body.get("object_type").getAsString()) {
+          case "activity":
+            logger.info("Object activity received");
+            break;
+          case "athlete":
+            logger.info("Object athlete received");
+            break;
+          default:
+            logger.info("Invalid request: invalid object_type");
+            httpResponse.setStatusCode(HttpURLConnection.HTTP_BAD_REQUEST);
+            break;
+        }
+        httpResponse.setStatusCode(HttpURLConnection.HTTP_OK);
+        writer.write("EVENT_RECEIVED");
+      }
+    } else {
+      logger.info("Invalid request: method not allowed");
+      httpResponse.setStatusCode(HttpURLConnection.HTTP_BAD_METHOD);
     }
   }
 }
