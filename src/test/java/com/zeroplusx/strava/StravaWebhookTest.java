@@ -21,7 +21,7 @@ import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class StravaWebhookTest {
-  private static Gson gson = new Gson();
+  private static final Gson gson = new Gson();
 
   @Mock
   private HttpRequest httpRequest;
@@ -40,7 +40,7 @@ public class StravaWebhookTest {
   }
 
   @Test
-  public void StravaWebhookEmptyTest() throws Exception {
+  public void StravaWebhookEmptyGetTest() throws Exception {
     new StravaWebhook().service(httpRequest, httpResponse);
 
     writerOut.flush();
@@ -48,9 +48,44 @@ public class StravaWebhookTest {
   }
 
   @Test
+  public void StravaWebhookInvalidTokenTest() throws Exception {
+    when(httpRequest.getMethod()).thenReturn("GET");
+
+    new StravaWebhook().service(httpRequest, httpResponse);
+
+    writerOut.flush();
+    verify(httpResponse, times(1)).setStatusCode(HttpURLConnection.HTTP_BAD_REQUEST);
+  }
+
+  @Test
+  public void StravaWebhookGetTest() throws Exception {
+    when(httpRequest.getMethod()).thenReturn("GET");
+
+    new StravaWebhook().service(httpRequest, httpResponse);
+
+    writerOut.flush();
+    verify(httpResponse, times(1)).setStatusCode(HttpURLConnection.HTTP_BAD_REQUEST);
+  }
+
+  @Test
   public void StravaWebhookPostTest() throws Exception {
     String requestJson = gson.toJson(Map.of("object_type", "activity"));
     BufferedReader bodyReader = new BufferedReader(new StringReader(requestJson));
+
+    when(httpRequest.getMethod()).thenReturn("POST");
+    when(httpRequest.getReader()).thenReturn(bodyReader);
+
+    new StravaWebhook().service(httpRequest, httpResponse);
+
+    writerOut.flush();
+    verify(httpResponse, times(1)).setStatusCode(HttpURLConnection.HTTP_OK);
+    Assert.assertEquals("EVENT_RECEIVED", responseOut.toString());
+  }
+
+  @Test
+  public void StravaWebhookCreateTest() throws Exception {
+    String payload = "{'aspect_type': 'create', 'event_time': 1596291925, 'object_id': 3848338728, 'object_type': 'activity', 'owner_id': 19147419, 'subscription_id': 161848, 'updates': {}}";
+    BufferedReader bodyReader = new BufferedReader(new StringReader(payload));
 
     when(httpRequest.getMethod()).thenReturn("POST");
     when(httpRequest.getReader()).thenReturn(bodyReader);
