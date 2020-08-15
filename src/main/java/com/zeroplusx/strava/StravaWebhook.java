@@ -10,10 +10,24 @@ import java.io.BufferedWriter;
 import java.net.HttpURLConnection;
 import java.util.logging.Logger;
 
+/**
+ * Main class of the webhook microsesrvice.
+ * It receives an HTTP request from Strava's backend and handles it's payload,
+ * processing the payload and calling the further service.
+ *
+ * @author Willian Paixao
+ * @version 1.0
+ * @since 1.0
+ */
 public class StravaWebhook implements HttpFunction {
   private static final Logger logger = Logger.getLogger(StravaWebhook.class.getName());
   private static final String token = System.getProperty("VERIFY_TOKEN");
 
+  /**
+   * @param httpRequest
+   * @param httpResponse
+   * @throws Exception
+   */
   @Override
   public void service(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
     BufferedWriter writer = httpResponse.getWriter();

@@ -10,3 +10,20 @@ $ gcloud functions deploy strava-webhook \
     --trigger-http \
     --allow-unauthenticated
 ```
+
+### Testing
+#### Running cloud function locally
+> NOTE: It requires [Google Cloud SDK](https://cloud.google.com/sdk) installed and credentials set.
+```shell script
+$ mvn function:run
+```
+#### Invoking cloud function
+> NOTE: It requires [Google Cloud SDK](https://cloud.google.com/sdk) installed and credentials set.
+```shell script
+$ curl -X POST https://us-central1-zero-plus-x.cloudfunctions.net/strava-webhook \
+    -H "Authorization: bearer $(gcloud auth print-identity-token)"
+```
+#### Running unit tests
+```shell script
+$ mvn test
+```
