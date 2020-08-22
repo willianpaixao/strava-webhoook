@@ -1,6 +1,9 @@
+*.env
 .gcloudignore
 .git
 .gitignore
 .gitlab-ci.yml
 .idea/
+LICENSE
+README.md
 target/
