@@ -5,7 +5,9 @@
 ### Deployment
 ```shell script
 $ gcloud functions deploy strava-webhook \
-    --entry-point com.zeroplusx.strava.StravaWebhook \
+    --entry-point com.paixao.strava.StravaWebhook \
+    --env-vars-file=.dev.env \
+    --memory=256MB \
     --runtime java11 \
     --trigger-http \
     --allow-unauthenticated
