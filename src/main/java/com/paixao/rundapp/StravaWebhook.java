@@ -1,4 +1,4 @@
-package com.paixao.strava;
+package com.paixao.rundapp;
 
 import com.google.api.core.ApiFuture;
 import com.google.cloud.functions.HttpFunction;
@@ -29,6 +29,8 @@ import java.util.logging.Logger;
  */
 public class StravaWebhook implements HttpFunction {
   private static final Logger logger = Logger.getLogger(StravaWebhook.class.getName());
+  private static BufferedWriter writer = null;
+
 
   /**
    * This function assumes the environment variables PROJECT_ID and TOPIC_ID were set on deployment.
@@ -70,7 +72,7 @@ public class StravaWebhook implements HttpFunction {
    */
   @Override
   public void service(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
-    BufferedWriter writer = httpResponse.getWriter();
+    writer = httpResponse.getWriter();
 
     switch (httpRequest.getMethod()) {
       case "GET":
@@ -85,6 +87,7 @@ public class StravaWebhook implements HttpFunction {
           logger.info("Invalid request: invalid verify_token");
           httpResponse.setStatusCode(HttpURLConnection.HTTP_BAD_REQUEST);
         }
+        break;
       case "POST":
         Gson gson = new Gson();
         JsonObject body = gson.fromJson(httpRequest.getReader(), JsonObject.class);
@@ -104,6 +107,7 @@ public class StravaWebhook implements HttpFunction {
           }
           httpResponse.setStatusCode(HttpURLConnection.HTTP_OK);
           writer.write("EVENT_RECEIVED");
+          break;
         }
       default:
         logger.info("Invalid request: method not allowed");
