@@ -1,10 +1,9 @@
-image: maven:3.6.3-openjdk-11
-
 include:
-  - template: Code-Quality.gitlab-ci.yml
-  - template: Dependency-Scanning.gitlab-ci.yml
-  - template: License-Management.gitlab-ci.yml
-  - template: SAST.gitlab-ci.yml
+  - template: Jobs/Code-Quality.gitlab-ci.yml
+  - template: Security/Dependency-Scanning.gitlab-ci.yml
+  - template: Security/License-Scanning.gitlab-ci.yml
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
 
 variables:
   MAVEN_CLI_OPTS: '--errors --fail-at-end'
@@ -19,6 +18,7 @@ cache:
 
 test:
   stage: test
+  image: maven:3.8.2-openjdk-11
   script:
     - 'mvn $MAVEN_CLI_OPTS test jacoco:report'
   artifacts:
@@ -28,8 +28,16 @@ test:
 
 build:
   stage: build
+  image: maven:3.8.2-openjdk-11
   script:
     - 'mvn $MAVEN_CLI_OPTS compile'
+
+deploy:
+  stage: deploy
+  image: google/cloud-sdk:alpine
+  script:
+    - gcloud auth activate-service-account --key-file $GCLOUD_SERVICE_KEY_FILE
+    - gcloud functions deploy strava-webhook --entry-point com.paixao.rundapp.StravaWebhook --memory=256MB --runtime java11 --trigger-http --allow-unauthenticated
 
 code_quality:
   artifacts:

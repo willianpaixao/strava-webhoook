@@ -19,8 +19,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
- * Main class of the webhook microsesrvice.
- * It receives an HTTP request from Strava's backend and handles it's payload,
+ * Main class of the webhook microservice.
+ * It receives an HTTP request from Strava's backend and handles its payload,
  * processing the payload and calling the further service.
  *
  * @author Willian Paixao
@@ -29,12 +29,11 @@ import java.util.logging.Logger;
  */
 public class StravaWebhook implements HttpFunction {
   private static final Logger logger = Logger.getLogger(StravaWebhook.class.getName());
-  private static BufferedWriter writer = null;
 
 
   /**
    * This function assumes the environment variables PROJECT_ID and TOPIC_ID were set on deployment.
-   * Otherwise it will fail to send a message.
+   * Otherwise, it will fail to send a message.
    *
    * @param message String to be pushed to the PubSub service
    * @throws IOException
@@ -54,6 +53,9 @@ public class StravaWebhook implements HttpFunction {
 
       ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
       logger.info("Published message ID: " + messageIdFuture.get());
+    } catch (NullPointerException nullPointerException) {
+      logger.severe("Publisher unreachable");
+      System.exit(1);
     } finally {
       if (publisher != null) {
         publisher.shutdown();
@@ -72,7 +74,7 @@ public class StravaWebhook implements HttpFunction {
    */
   @Override
   public void service(HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
-    writer = httpResponse.getWriter();
+    BufferedWriter writer = httpResponse.getWriter();
 
     switch (httpRequest.getMethod()) {
       case "GET":
